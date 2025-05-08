@@ -7,12 +7,13 @@ from skimage.metrics import peak_signal_noise_ratio as psnr, structural_similari
 imagen = cv2.imread('C:/Users/EdgarMauricioTrejoDe/Documents/4toSemestre/optimizacion_matemarica/tigre.jpg', cv2.IMREAD_GRAYSCALE).astype(np.float32)
 imagen = cv2.resize(imagen, (256, 256)).astype(np.float32)
 
+# Función para agregar ruido a la imagen
 def ruido(imagen, sigma):
-    ruido = np.random.normal(0, sigma*255, imagen.shape) #ruido escalado para que sea visible
-    imagenRuido = imagen + ruido
-    return np.clip(imagenRuido, 0, 255) #evitar valores fuera de rango
+    ruido = np.random.normal(0, sigma, imagen.shape)
+    imagenRuido = imagen + ruido 
+    return np.clip(imagenRuido, 0, 255)
 
-imagenRuido = ruido(imagen, sigma=0.1)  
+imagenRuido = ruido(imagen, sigma=40)  
 
 # Función objetivo
 def funcion_objetivo(u, f, lambda_param):
@@ -23,8 +24,7 @@ def funcion_objetivo(u, f, lambda_param):
 
 # Gradiente
 def gradiente(u, f, lambda_param):
-    #Calculo de laplaciano
-    laplaciano = ( 
+    laplaciano = (
         -4 * u +
         np.roll(u, 1, axis=0) + np.roll(u, -1, axis=0) +
         np.roll(u, 1, axis=1) + np.roll(u, -1, axis=1)
@@ -40,7 +40,7 @@ def descenso_gradiente_simple(f, grad_f, x0, alpha, lambda_param, max_iter, eps)
         x0 = x0 - alpha * grad
     return x0
 
-# Descenso con momentum 
+# Descenso con momentum (corregido)
 def descenso_gradiente_momentum(f, grad_f, x0, alpha, beta, lambda_param, max_iter, eps):
     x = x0.copy()
     v = np.zeros_like(x)
@@ -66,17 +66,22 @@ def descenso_gradiente_nesterov(f, grad_f, x0, alpha, beta, lambda_param, max_it
             break
     return x
 
-# Parámetros
-alpha = 0.01
+# Parámetros ajustados para mejorar la restauración
+alpha = 0.01  # Tasa de aprendizaje reducida
 beta = 0.9  
-lambda_param = 0.1
-max_iter = 500
-eps = 1e-3
+lambda_param = 0.1  # Regularización más fuerte
+max_iter = 500  # Más iteraciones para permitir una mejor convergencia
+eps = 1e-3  # Umbral de convergencia
 
 # Aplicar métodos
 resultado_simple = descenso_gradiente_simple(funcion_objetivo, gradiente, imagenRuido.copy(), alpha, lambda_param, max_iter, eps)
 resultado_momentum = descenso_gradiente_momentum(funcion_objetivo, gradiente, imagenRuido.copy(), alpha, beta, lambda_param, max_iter, eps)
 resultado_nesterov = descenso_gradiente_nesterov(funcion_objetivo, gradiente, imagenRuido.copy(), alpha, beta, lambda_param, max_iter, eps)
+
+# Asegurarse de que las imágenes restauradas estén en el rango adecuado
+resultado_simple = np.clip(resultado_simple, 0, 255).astype(np.uint8)
+resultado_momentum = np.clip(resultado_momentum, 0, 255).astype(np.uint8)
+resultado_nesterov = np.clip(resultado_nesterov, 0, 255).astype(np.uint8)
 
 # Mostrar imágenes
 plt.figure(figsize=(12, 8))
