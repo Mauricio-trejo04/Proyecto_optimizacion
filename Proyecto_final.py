@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+from skimage.metrics import peak_signal_noise_ratio as psnr, structural_similarity as ssim
 
 
 imagen = cv2.imread('C:/Users/EdgarMauricioTrejoDe/Documents/4toSemestre/optimizacion_matemarica/tigre.jpg', cv2.IMREAD_GRAYSCALE).astype(np.float32)
@@ -83,4 +84,19 @@ plt.subplot(1, 5, 4); plt.imshow(resultado_momentum, cmap='gray'); plt.title("Mo
 plt.subplot(1, 5, 5); plt.imshow(resultado_nesterov, cmap='gray'); plt.title("Nesterov"); plt.axis('off')
 plt.tight_layout()
 plt.show()
+
+# Métricas
+def calcular_metricas(ref, proc):
+    ref = ref.astype(np.uint8)
+    proc = np.clip(proc, 0, 255).astype(np.uint8)
+    return psnr(ref, proc), ssim(ref, proc)
+
+psnr_s, ssim_s = calcular_metricas(imagen, resultado_simple)
+psnr_m, ssim_m = calcular_metricas(imagen, resultado_momentum)
+psnr_n, ssim_n = calcular_metricas(imagen, resultado_nesterov)
+
+print("\nMétricas de calidad:")
+print(f"Gradiente simple:   PSNR = {psnr_s:.2f}, SSIM = {ssim_s:.4f}")
+print(f"Con momentum:       PSNR = {psnr_m:.2f}, SSIM = {ssim_m:.4f}")
+print(f"Con Nesterov:       PSNR = {psnr_n:.2f}, SSIM = {ssim_n:.4f}")
 
