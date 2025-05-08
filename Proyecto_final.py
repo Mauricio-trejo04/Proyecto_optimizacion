@@ -16,6 +16,21 @@ def ruido(imagen, sigma):
 
 imagenRuido = ruido(imagen, sigma=0.5)
 
+def funcion_objetivo(u, f, lambda_param):
+    diff = u - f
+    grad_u_x = np.roll(u, -1, axis=1) - u
+    grad_u_y = np.roll(u, -1, axis=0) - u
+    return 0.5 * np.sum(diff**2) + 0.5 * lambda_param * (np.sum(grad_u_x**2) + np.sum(grad_u_y**2))
+
+# Gradiente (añadido en este commit)
+def gradiente(u, f, lambda_param):
+    laplaciano = (
+        -4 * u +
+        np.roll(u, 1, axis=0) + np.roll(u, -1, axis=0) +
+        np.roll(u, 1, axis=1) + np.roll(u, -1, axis=1)
+    )
+    return (u - f) - lambda_param * laplaciano
+
 #Convertir la imagen con ruido a RGB para graficar
 imagenRuidoRgb = cv2.cvtColor(imagenRuido.astype(np.uint8), cv2.COLOR_BGR2RGB)
 
